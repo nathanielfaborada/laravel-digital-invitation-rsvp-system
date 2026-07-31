@@ -1,3 +1,19 @@
+# Laravel
+/vendor
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+.env.backup
+.env.production
+
+
 # Logs
 logs
 *.log
