@@ -11,12 +11,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/terms', function () {
+    return view('legal.terms');
+})->name('terms');
+
+Route::get('/privacy', function () {
+    return view('legal.privacy');
+})->name('privacy');
+
 Route::get('/invite/{guest:unique_code}', [InviteController::class, 'show'])->name('invite.show');
 Route::get('/invite/{guest:unique_code}/rsvp', [RsvpController::class, 'create'])->name('rsvp.create');
 Route::post('/invite/{guest:unique_code}/rsvp', [RsvpController::class, 'store'])->name('rsvp.store');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('events.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

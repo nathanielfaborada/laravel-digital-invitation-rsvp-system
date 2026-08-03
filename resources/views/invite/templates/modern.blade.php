@@ -39,6 +39,8 @@
         </div>
 
         <div class="border-t border-gray-100 pt-6">
+
+            @include('invite.partials.map', compact('event'))
             @include('invite.partials.countdown', compact('event'))
 
             <p class="text-gray-600 mb-6">
