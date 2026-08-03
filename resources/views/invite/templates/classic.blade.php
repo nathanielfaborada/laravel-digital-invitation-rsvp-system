@@ -29,6 +29,8 @@
             </div>
         </div>
 
+        @include('invite.partials.map', compact('event'))
+
         @include('invite.partials.countdown', compact('event'))
 
         <p class="text-lg mb-6">

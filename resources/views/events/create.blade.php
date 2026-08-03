@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12" x-data="{ template: 'classic', title: '', venue: '' }">
+    <div class="py-12" x-data="{ template: 'classic', title: '', description: '' ,venue: '' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             @if ($errors->any())
@@ -32,7 +32,7 @@
 
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('description') }}</textarea>
+                            <textarea name="description" x-model="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('description') }}</textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 mb-4">
@@ -100,9 +100,12 @@
                         <div class="p-8 text-center">
                             <p class="text-sm text-gray-500 uppercase tracking-wide mb-2">You're Invited</p>
                             <h1 class="text-2xl font-bold text-gray-800 mb-3" x-text="title || 'Event Title'"></h1>
+                            <div class="text-2xl font-bold text-gray-800 mb-3">
+                                <p class="text-2xl font-light text-gray-900 mb-4" x-text="description || 'Description'"></p>
+                            </div>
                             <div class="border-t border-b border-gray-200 py-3 mb-4 text-sm">
                                 <p class="text-gray-500 uppercase text-xs">Venue</p>
-                                <p class="font-semibold" x-text="venue || 'Venue Name'"></p>
+                                <p class="font-semibold" x-text="venue || 'Venue Place'"></p>
                             </div>
                             <span class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold">RSVP Now</span>
                         </div>
@@ -114,8 +117,11 @@
                             <p class="text-xs text-gray-400 uppercase tracking-widest mb-2">Invitation</p>
                             <h1 class="text-2xl font-light text-gray-900 mb-4" x-text="title || 'Event Title'"></h1>
                             <div class="flex items-center gap-3 mb-4">
+                                <p class="text-2xl font-light text-gray-900 mb-4" x-text="description || 'Description'"></p>
+                            </div>
+                            <div class="flex items-center gap-3 mb-4">
                                 <div class="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-xs">📍</div>
-                                <p class="font-medium text-gray-800 text-sm" x-text="venue || 'Venue Name'"></p>
+                                <p class="font-medium text-gray-800 text-sm" x-text="venue || 'Venue Place'"></p>
                             </div>
                             <span class="block text-center bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-medium">RSVP →</span>
                         </div>
@@ -129,7 +135,7 @@
                             <h1 class="text-xl font-serif text-rose-900 mb-3" x-text="title || 'Event Title'"></h1>
                             <div class="bg-white/60 rounded-2xl border border-pink-200 py-3 px-4 mb-4 text-sm">
                                 <p class="text-xs text-rose-400 uppercase">Venue</p>
-                                <p class="font-semibold text-rose-900" x-text="venue || 'Venue Name'"></p>
+                                <p class="font-semibold text-rose-900" x-text="venue || 'Venue Place'"></p>
                             </div>
                             <span class="inline-block bg-rose-400 text-white px-6 py-2 rounded-full text-sm font-semibold">RSVP with Love 💌</span>
                         </div>

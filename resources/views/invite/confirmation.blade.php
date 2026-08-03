@@ -42,6 +42,13 @@
                 @endif
             </div>
 
+            @if ($guest->rsvp->status === 'attending')
+                <div class="border-t border-gray-200 pt-6 mt-6 text-center">
+                    <p class="text-sm text-gray-500 mb-3">Show this QR code at the event entrance</p>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode(url('/invite/' . $guest->unique_code)) }}" alt="Check-in QR Code" class="mx-auto rounded-lg border border-gray-200 p-2">
+                </div>
+            @endif
+
         </div>
     </div>
 

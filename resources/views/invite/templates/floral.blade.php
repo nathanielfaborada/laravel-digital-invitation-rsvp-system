@@ -30,6 +30,7 @@
             </div>
         </div>
 
+        @include('invite.partials.map', compact('event'))
         @include('invite.partials.countdown', compact('event'))
 
         <p class="text-lg text-rose-800 mb-6 font-serif italic">
