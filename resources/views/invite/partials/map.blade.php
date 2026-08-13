@@ -1,7 +1,7 @@
-<div class="mb-6 rounded-lg overflow-hidden border border-gray-200">
+<div class="mb-3 rounded-lg overflow-hidden border border-gray-200">
     <iframe
         width="100%"
-        height="200"
+        height="100"
         style="border:0"
         loading="lazy"
         allowfullscreen

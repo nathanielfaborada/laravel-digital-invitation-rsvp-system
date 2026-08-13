@@ -13,13 +13,12 @@ class RsvpController extends Controller
      */
     public function create(Guest $guest)
     {
-        // Kung naka-RSVP na, dumiretso na sa confirmation view
+        $event = $guest->event;
         if ($guest->rsvp) {
-            return view('invite.confirmation', compact('guest'));
+            return view('invite.confirmation', compact('guest', 'event'));
         }
 
-        $event = $guest->event;
-        return view('invite.rsvp', compact('guest', 'event'));
+        return view('invite.show', compact('guest', 'event'))->with('openRsvp', true);
     }
 
     /**
@@ -32,20 +31,37 @@ class RsvpController extends Controller
             return redirect()->route('rsvp.create', $guest);
         }
 
+        $maxAllowed = max($guest->max_companions ?? 1, 1);
+
+        if ($request->has('attending') && !$request->has('status')) {
+            $request->merge([
+                'status' => $request->input('attending') === 'yes' ? 'attending' : 'not_attending',
+            ]);
+        }
+
         $validated = $request->validate([
             'status' => 'required|in:attending,not_attending',
-            'companions_count' => 'nullable|integer|min:0|max:' . $guest->max_companions,
-            'message' => 'nullable|string|max:500',
+            'attending' => 'nullable|in:yes,no',
+            'has_companion' => 'nullable',
+            'companion_name' => 'nullable|string|max:255',
+            'companions_count' => "nullable|integer|min:0|max:{$maxAllowed}",
+            'message' => 'nullable|string|max:1000',
         ]);
 
+        $isAttending = ($validated['status'] === 'attending') || ($request->input('attending') === 'yes');
+        $hasCompanion = $isAttending && ($request->boolean('has_companion') || ($request->input('has_companion') == '1') || (($validated['companions_count'] ?? 0) > 0));
+
+        $validated['status'] = $isAttending ? 'attending' : 'not_attending';
         $validated['guest_id'] = $guest->id;
-        $validated['companions_count'] = $validated['companions_count'] ?? 0;
+        $validated['companions_count'] = $hasCompanion ? 1 : 0;
+        $validated['companion_name'] = $hasCompanion ? ($validated['companion_name'] ?? null) : null;
         $validated['responded_at'] = now();
 
         Rsvp::create($validated);
 
         $guest->load('rsvp');
+        $event = $guest->event;
 
-        return view('invite.confirmation', compact('guest'));
+        return view('invite.confirmation', compact('guest', 'event'));
     }
 }

@@ -13,6 +13,7 @@ class Rsvp extends Model
         'guest_id',
         'status',
         'companions_count',
+        'companion_name',
         'message',
         'responded_at',
     ];

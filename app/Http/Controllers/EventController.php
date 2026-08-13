@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EventController extends Controller
 {
@@ -29,19 +30,24 @@ class EventController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'event_date' => 'required|date',
+            'title' => 'required|string|max:50',
+            'description' => 'nullable|string|max:300',
+            'event_date' => 'required|date|after_or_equal:today',
             'event_time' => 'required',
             'venue' => 'required|string|max:255',
             'cover_image' => 'nullable|image|max:2048',
             'template' => 'nullable|in:classic,modern,floral',
+        ], [
+            'event_date.after_or_equal' => 'Event date cannot be in the past.',
         ]);
 
         $validated['user_id'] = auth()->id();
 
         if ($request->hasFile('cover_image')) {
-            $validated['cover_image'] = $request->file('cover_image')->store('event-covers', 'public');
+            $uploadedFile = Cloudinary::uploadApi()->upload($request->file('cover_image')->getRealPath(), [
+                'folder' => 'invitr/event-covers',
+            ]);
+            $validated['cover_image'] = $uploadedFile['secure_url'];
         }
 
         Event::create($validated);
@@ -55,7 +61,24 @@ class EventController extends Controller
     public function show(Event $event)
     {
         $this->authorize('view', $event);
-        return view('events.show', compact('event'));
+
+        $guests = $event->guests()->with('rsvp')->latest()->get();
+
+        $stats = [
+            'total_invited' => $guests->count(),
+            'attending' => $guests->filter(fn($g) => $g->rsvp?->status === 'attending')->count(),
+            'not_attending' => $guests->filter(fn($g) => $g->rsvp?->status === 'not_attending')->count(),
+            'pending' => $guests->filter(fn($g) => $g->rsvp === null)->count(),
+            'total_headcount' => $guests
+                ->filter(fn($g) => $g->rsvp?->status === 'attending')
+                ->sum(fn($g) => 1 + $g->rsvp->companions_count),
+        ];
+
+        return view('events.show', compact(
+            'event',
+            'guests',
+            'stats'
+        ));
     }
 
     /**
@@ -64,6 +87,12 @@ class EventController extends Controller
     public function edit(Event $event)
     {
         $this->authorize('update', $event);
+
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Past events cannot be edited.');
+        }
+
         return view('events.edit', compact('event'));
     }
 
@@ -74,23 +103,33 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Past events cannot be edited.');
+        }
+
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'event_date' => 'required|date',
+            'title' => 'required|string|max:50',
+            'description' => 'nullable|string|max:300',
+            'event_date' => 'required|date|after_or_equal:today',
             'event_time' => 'required',
             'venue' => 'required|string|max:255',
             'cover_image' => 'nullable|image|max:2048',
             'template' => 'nullable|in:classic,modern,floral',
+        ], [
+            'event_date.after_or_equal' => 'Event date cannot be in the past.',
         ]);
 
         if ($request->hasFile('cover_image')) {
-            $validated['cover_image'] = $request->file('cover_image')->store('event-covers', 'public');
-        }
+    $uploadedFile = Cloudinary::uploadApi()->upload($request->file('cover_image')->getRealPath(), [
+        'folder' => 'invitr/event-covers',
+    ]);
+    $validated['cover_image'] = $uploadedFile['secure_url'];
+}
 
         $event->update($validated);
 
-        return redirect()->route('events.index')->with('success', 'Event updated successfully!');
+        return redirect()->route('events.show', $event)->with('success', 'Event updated successfully!');
     }
 
     /**

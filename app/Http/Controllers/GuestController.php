@@ -37,6 +37,12 @@ class GuestController extends Controller
     public function create(Event $event)
     {
         $this->authorize('update', $event);
+
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Cannot add or modify guests for a past event.');
+        }
+
         return view('guests.create', compact('event'));
     }
 
@@ -47,6 +53,11 @@ class GuestController extends Controller
     {
         $this->authorize('update', $event);
 
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Cannot add or modify guests for a past event.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -54,16 +65,30 @@ class GuestController extends Controller
             'max_companions' => 'nullable|integer|min:0',
         ]);
 
+        $exists = Guest::where('event_id', $event->id)
+            ->where(function ($q) use ($request) {
+                if ($request->filled('email')) {
+                    $q->where('email', $request->email);
+                } else {
+                    $q->where('name', $request->name);
+                }
+            })->exists();
+
+        if ($exists) {
+            return redirect()->back()->withInput()->with('error', 'Guest already exists in this event list!');
+        }
+
         $validated['event_id'] = $event->id;
+        $validated['max_companions'] = $validated['max_companions'] ?? 1;
 
         $guest = Guest::create($validated);
 
         if ($guest->email) {
             Mail::to($guest->email)->send(new InviteGuestMail($guest));
-            return redirect()->route('events.guests.index', $event)->with('success', 'Guest added and invite sent!');
+            return redirect()->route('events.show', $event)->with('success', 'Guest added and invite sent!');
         }
 
-        return redirect()->route('events.guests.index', $event)->with('success', 'Guest added successfully! (No email provided, invite not sent)');
+        return redirect()->route('events.show', $event)->with('success', 'Guest added successfully! (No email provided, invite not sent)');
     }
 
     /**
@@ -81,7 +106,14 @@ class GuestController extends Controller
     public function edit(Guest $guest)
     {
         $this->authorize('update', $guest->event);
-        return view('guests.edit', compact('guest'));
+
+        $event = $guest->event;
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Cannot add or modify guests for a past event.');
+        }
+
+        return redirect()->route('events.show', $event);
     }
 
     /**
@@ -91,16 +123,59 @@ class GuestController extends Controller
     {
         $this->authorize('update', $guest->event);
 
+        $event = $guest->event;
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['error' => 'Cannot add or modify guests for a past event.'], 422);
+            }
+            return redirect()->route('events.show', $event)->with('error', 'Cannot add or modify guests for a past event.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'max_companions' => 'nullable|integer|min:0',
+            'status' => 'nullable|in:pending,attending,not_attending',
         ]);
 
-        $guest->update($validated);
+        $guest->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'max_companions' => $validated['max_companions'] ?? 0,
+        ]);
 
-        return redirect()->route('events.guests.index', $guest->event)->with('success', 'Guest updated successfully!');
+        if (array_key_exists('status', $validated) && $validated['status'] !== null) {
+            if ($validated['status'] === 'pending') {
+                if ($guest->rsvp) {
+                    $guest->rsvp->delete();
+                }
+            } else {
+                if ($guest->rsvp) {
+                    $guest->rsvp->update(['status' => $validated['status']]);
+                } else {
+                    $guest->rsvp()->create([
+                        'status' => $validated['status'],
+                        'companions_count' => 0,
+                        'responded_at' => now(),
+                    ]);
+                }
+            }
+        }
+
+        $guest->load('rsvp');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Guest updated successfully!',
+                'guest' => $guest,
+            ]);
+        }
+
+        return redirect()->route('events.show', $guest->event)->with('success', 'Guest updated successfully!');
     }
 
     /**
@@ -109,10 +184,40 @@ class GuestController extends Controller
     public function destroy(Guest $guest)
     {
         $this->authorize('update', $guest->event);
+
         $event = $guest->event;
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->route('events.show', $event)->with('error', 'Cannot add or modify guests for a past event.');
+        }
+
         $guest->delete();
 
-        return redirect()->route('events.guests.index', $event)->with('success', 'Guest deleted successfully!');
+        return redirect()->route('events.show', $event)->with('success', 'Guest deleted successfully!');
+    }
+
+    /**
+     * Remove multiple specified resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'guest_ids' => 'required|array|min:1',
+            'guest_ids.*' => 'required|integer|exists:guests,id',
+        ]);
+
+        $guests = Guest::whereIn('id', $request->guest_ids)
+            ->whereHas('event', fn($q) => $q->where('user_id', auth()->id()))
+            ->get();
+
+        if ($guests->isEmpty()) {
+            return redirect()->back()->with('error', 'No valid guests selected for deletion.');
+        }
+
+        $count = $guests->count();
+        Guest::whereIn('id', $guests->pluck('id'))->delete();
+
+        return redirect()->back()->with('success', $count . ' guests deleted successfully!');
     }
 
     public function export(Event $event)
@@ -153,6 +258,12 @@ class GuestController extends Controller
     public function sendInvite(Guest $guest)
     {
         $this->authorize('update', $guest->event);
+
+        $event = $guest->event;
+        $eventDateTime = \Carbon\Carbon::parse($event->event_date . ' ' . ($event->event_time ?? '23:59:59'));
+        if ($eventDateTime->isPast()) {
+            return redirect()->back()->with('error', 'Cannot send invitations for a past event.');
+        }
 
         if (!$guest->email) {
             return redirect()->back()->with('error', 'This guest has no email address.');
