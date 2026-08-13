@@ -24,6 +24,7 @@ Route::get('/invite/{guest:unique_code}/rsvp', [RsvpController::class, 'create']
 Route::post('/invite/{guest:unique_code}/rsvp', [RsvpController::class, 'store'])->name('rsvp.store');
 
 Route::get('/dashboard', function () {
+    session()->reflash();
     return redirect()->route('events.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -35,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('events', EventController::class);
     Route::get('/events/{event}/guests/export', [GuestController::class, 'export'])->name('events.guests.export');
     Route::post('/guests/{guest}/send-invite', [GuestController::class, 'sendInvite'])->name('guests.send-invite');
+    Route::delete('/guests/bulk-destroy', [GuestController::class, 'bulkDestroy'])->name('guests.bulk-destroy');
     Route::resource('events.guests', GuestController::class)->shallow();
 });
 

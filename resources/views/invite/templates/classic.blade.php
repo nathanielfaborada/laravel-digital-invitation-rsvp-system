@@ -1,10 +1,8 @@
-<div class="max-w-lg w-full bg-white rounded-xl shadow-lg overflow-hidden">
+<div class="max-w-lg w-full bg-white rounded-xl shadow-lg overflow-hidden relative">
 
-    @if ($event->cover_image)
-        <img src="{{ Storage::url($event->cover_image) }}" alt="{{ $event->title }}" class="w-full h-64 object-cover">
-    @endif
+    <img x-show="coverImagePreview" :src="coverImagePreview" alt="Cover" class="absolute inset-0 w-full h-full object-cover opacity-30">
 
-    <div class="p-8 text-center">
+    <div class="p-8 text-center relative z-10">
         <p class="text-sm text-gray-500 uppercase tracking-wide mb-2">You're Invited</p>
         <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ $event->title }}</h1>
 
@@ -12,7 +10,7 @@
             <p class="text-gray-600 mb-6">{{ $event->description }}</p>
         @endif
 
-        <div class="border-t border-b border-gray-200 py-4 mb-6">
+        <div class="border-t border-b border-gray-200 py-4 mb-6 bg-white/70 rounded-lg">
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-xs text-gray-500 uppercase">Date</p>
@@ -37,7 +35,7 @@
             Dear <span class="font-semibold">{{ $guest->name }}</span>, we'd love for you to join us!
         </p>
 
-        <a href="{{ route('rsvp.create', $guest) }}" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700">
+        <a href="{{ route('rsvp.create', $guest) }}" @click.prevent="showRsvpModal = true" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700 lg:hidden cursor-pointer">
             RSVP Now
         </a>
     </div>

@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Invitr') }} — Digital Invitations Made Simple</title>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gradient-to-b from-indigo-50 via-white to-white min-h-screen overflow-x-hidden flex flex-col">
@@ -61,6 +63,75 @@
 
     <!-- FOOTER (always at bottom) -->
     <x-public-footer />
+
+    <!-- Universal Toast Handler -->
+    @if (session('alert.config') || session('success') || session('error') || session('warning') || session('info') || session('status'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const alertConfig = @json(session('alert.config'));
+                const successMsg = @json(session('success'));
+                const errorMsg = @json(session('error'));
+                const warningMsg = @json(session('warning'));
+                const infoMsg = @json(session('info'));
+                const statusMsg = @json(session('status'));
+
+                if (alertConfig) {
+                    try {
+                        let parsedConfig = typeof alertConfig === 'string' ? JSON.parse(alertConfig) : alertConfig;
+                        if (typeof parsedConfig === 'object' && parsedConfig !== null) {
+                            parsedConfig.customClass = Object.assign({}, parsedConfig.customClass, {
+                                container: 'z-[99999]'
+                            });
+                            Swal.fire(parsedConfig);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse alert.config:', e);
+                    }
+                }
+
+                let title = successMsg || errorMsg || warningMsg || infoMsg || statusMsg;
+                let icon = 'info';
+
+                if (successMsg) {
+                    icon = 'success';
+                } else if (errorMsg) {
+                    icon = 'error';
+                } else if (warningMsg) {
+                    icon = 'warning';
+                } else if (infoMsg) {
+                    icon = 'info';
+                } else if (statusMsg) {
+                    icon = 'info';
+                    if (title === 'password-updated') {
+                        title = 'Password updated successfully!';
+                        icon = 'success';
+                    } else if (title === 'verification-link-sent') {
+                        title = 'A new verification link has been sent to your email address.';
+                        icon = 'success';
+                    } else if (title === 'profile-updated') {
+                        title = 'Profile updated successfully!';
+                        icon = 'success';
+                    }
+                }
+
+                if (title) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: icon,
+                        title: title,
+                        showConfirmButton: false,
+                        timer: 3500,
+                        timerProgressBar: true,
+                        customClass: {
+                            container: 'z-[99999]'
+                        }
+                    });
+                }
+            });
+        </script>
+    @endif
 
 </body>
 </html>

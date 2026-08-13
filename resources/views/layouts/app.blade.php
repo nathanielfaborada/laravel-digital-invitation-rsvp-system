@@ -11,7 +11,15 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
+        <!-- SweetAlert2 CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <!-- Alpine.js Cloak Protection -->
+        <style>
+            [x-cloak] { display: none !important; }
+        </style>
+
+        <!-- Scripts -->    
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
@@ -21,7 +29,7 @@
             <!-- Page Heading -->
             @isset($header)
                 <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
@@ -32,5 +40,31 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Universal Alert Handler (For Custom SweetAlert Dialogs) -->
+        @if (session('alert.config'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const alertConfig = @json(session('alert.config'));
+
+                    if (alertConfig) {
+                        try {
+                            let parsedConfig = typeof alertConfig === 'string' ? JSON.parse(alertConfig) : alertConfig;
+                            if (typeof parsedConfig === 'object' && parsedConfig !== null) {
+                                parsedConfig.customClass = Object.assign({}, parsedConfig.customClass, {
+                                    container: 'z-[99999]'
+                                });
+                                Swal.fire(parsedConfig);
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse alert.config:', e);
+                        }
+                    }
+                });
+            </script>
+        @endif
+
+        <!-- Toast Notification Component -->
+        <x-toast-notification />
     </body>
 </html>

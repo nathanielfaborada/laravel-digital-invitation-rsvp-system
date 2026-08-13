@@ -11,6 +11,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- SweetAlert2 CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -18,8 +21,6 @@
         <div class="min-h-screen flex flex-col bg-gradient-to-b from-indigo-50 via-white to-white">
 
             <x-public-nav />
-
-            
 
             <!-- FORM -->
             <div class="flex-1 flex flex-col items-center justify-center px-4 py-8">
@@ -34,5 +35,31 @@
             <x-public-footer />
 
         </div>
+
+        <!-- Universal Alert Handler (For Custom SweetAlert Dialogs) -->
+        @if (session('alert.config'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const alertConfig = @json(session('alert.config'));
+
+                    if (alertConfig) {
+                        try {
+                            let parsedConfig = typeof alertConfig === 'string' ? JSON.parse(alertConfig) : alertConfig;
+                            if (typeof parsedConfig === 'object' && parsedConfig !== null) {
+                                parsedConfig.customClass = Object.assign({}, parsedConfig.customClass, {
+                                    container: 'z-[99999]'
+                                });
+                                Swal.fire(parsedConfig);
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse alert.config:', e);
+                        }
+                    }
+                });
+            </script>
+        @endif
+
+        <!-- Toast Notification Component -->
+        <x-toast-notification />
     </body>
 </html>
