@@ -6,9 +6,16 @@
     <title>{{ config('app.name', 'Invitr') }} — Digital Invitations Made Simple</title>
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Alpine.js Cloak Protection -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-b from-indigo-50 via-white to-white min-h-screen overflow-x-hidden flex flex-col">
+<body 
+    x-data="{ showCoffeeModal: false }" 
+    class="bg-gradient-to-b from-indigo-50 via-white to-white min-h-screen overflow-x-hidden flex flex-col"
+>
 
     <!-- NAVBAR -->
     <x-public-nav />
@@ -23,28 +30,28 @@
                 Send beautiful invites.<br>Track every RSVP.
             </h1>
             <p class="text-sm sm:text-lg text-gray-500 mb-5 sm:mb-8 max-w-xl mx-auto">
-                Create your event, invite your guests, and watch responses roll in — all in one simple dashboard.
+                Create event invitations, invite guests with unique links, and track attendance in real-time.
             </p>
-            <div class="flex justify-center gap-3">
-                @guest
-                    <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold hover:bg-indigo-700">
-                        Create Your First Event
+            <div class="flex justify-center">
+                @auth
+                    <a href="{{ route('events.index') }}" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-xl text-sm sm:text-base shadow-sm hover:shadow-md transition">
+                        Go to Dashboard →
                     </a>
                 @else
-                    <a href="{{ route('events.index') }}" class="bg-indigo-600 text-white px-5 sm:px-8 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold hover:bg-indigo-700">
-                        Go to My Events
+                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2.5 sm:px-8 sm:py-3.5 rounded-xl text-sm sm:text-base shadow-sm hover:shadow-md transition">
+                        Create Your First Event — It's Free
                     </a>
-                @endguest
+                @endauth
             </div>
         </div>
 
         <!-- FEATURES -->
-        <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-4 sm:pb-20">
-            <div class="grid grid-cols-3 gap-2 sm:gap-6">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-8 sm:pb-16 w-full">
+            <div class="grid grid-cols-3 gap-2.5 sm:gap-6">
                 <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm p-2.5 sm:p-6 text-center">
-                    <div class="text-xl sm:text-3xl mb-1 sm:mb-3">🎨</div>
+                    <div class="text-xl sm:text-3xl mb-1 sm:mb-3">✨</div>
                     <h3 class="font-semibold text-gray-800 mb-0.5 sm:mb-2 text-[11px] sm:text-base leading-tight">Beautiful Templates</h3>
-                    <p class="hidden sm:block text-sm text-gray-500">Classic, Modern, or Floral — pick a design that fits your event.</p>
+                    <p class="hidden sm:block text-sm text-gray-500">Pick a style that matches your event — Classic, Floral, Dark Elegant, and more.</p>
                 </div>
                 <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm p-2.5 sm:p-6 text-center">
                     <div class="text-xl sm:text-3xl mb-1 sm:mb-3">📊</div>
@@ -63,6 +70,9 @@
 
     <!-- FOOTER (always at bottom) -->
     <x-public-footer />
+
+    <!-- Coffee Modal Component -->
+    <x-coffee-modal />
 
     <!-- Universal Toast Handler -->
     @if (session('alert.config') || session('success') || session('error') || session('warning') || session('info') || session('status'))

@@ -57,16 +57,6 @@
         <div class="py-2 sm:py-6">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                @if ($errors->any())
-                    <div class="mb-2 bg-red-100 border border-red-400 text-red-700 px-3 py-1.5 rounded text-xs">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <!-- MAIN CARD -->
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-3 sm:p-6">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
@@ -76,6 +66,16 @@
                             <form action="{{ route('events.update', $event) }}" method="POST" enctype="multipart/form-data" class="flex flex-col justify-between min-h-[520px] sm:min-h-0">
                                 @csrf
                                 @method('PUT')
+
+                                @if ($errors->any())
+                                    <div class="mb-3 bg-rose-50 border border-rose-200 text-rose-700 px-3.5 py-2.5 rounded-xl text-xs">
+                                        <ul class="list-disc list-inside space-y-0.5">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
 
                                 <!-- Top Form Fields Wrapper -->
                                 <div class="space-y-2 sm:space-y-4">

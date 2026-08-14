@@ -142,4 +142,29 @@ class EventController extends Controller
 
         return redirect()->route('events.index')->with('success', 'Event deleted successfully!');
     }
+
+    /**
+     * Sanitize a single CSV field against formula injection.
+     */
+    public function sanitizeCsvField($value)
+    {
+        if (is_string($value) && in_array(substr(trim($value), 0, 1), ['=', '+', '-', '@', "\t", "\r"])) {
+            return "'" . $value; // Prefix with single quote so Excel handles it strictly as text
+        }
+        return $value;
+    }
+
+    /**
+     * Export event guests as CSV.
+     */
+    public function export(Event $event)
+    {
+        $this->authorize('view', $event);
+
+        if ($event->guests()->count() === 0) {
+            return back()->with('error', 'Cannot export an empty guest list. Please add at least 1 guest.');
+        }
+
+        return app(GuestController::class)->export($event);
+    }
 }

@@ -22,23 +22,31 @@
         <!-- Scripts -->    
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
+    <body 
+        x-data="{ showCoffeeModal: false }"
+        class="font-sans antialiased"
+    >
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-between">
+            <div>
+                @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+                <!-- Page Heading -->
+                @isset($header)
+                    <header class="bg-white dark:bg-gray-800 shadow">
+                        <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+                <!-- Page Content -->
+                <main>
+                    {{ $slot }}
+                </main>
+            </div>
+
+            <!-- Footer -->
+            <x-public-footer />
         </div>
 
         <!-- Universal Alert Handler (For Custom SweetAlert Dialogs) -->
@@ -66,5 +74,8 @@
 
         <!-- Toast Notification Component -->
         <x-toast-notification />
+
+        <!-- Coffee Modal Component -->
+        <x-coffee-modal />
     </body>
 </html>

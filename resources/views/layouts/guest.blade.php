@@ -14,10 +14,18 @@
         <!-- SweetAlert2 CDN -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+        <!-- Alpine.js Cloak Protection -->
+        <style>
+            [x-cloak] { display: none !important; }
+        </style>
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
+    <body 
+        x-data="{ showCoffeeModal: false }" 
+        class="font-sans text-gray-900 antialiased"
+    >
         <div class="min-h-screen flex flex-col bg-gradient-to-b from-indigo-50 via-white to-white">
 
             <x-public-nav />
@@ -61,5 +69,8 @@
 
         <!-- Toast Notification Component -->
         <x-toast-notification />
+
+        <!-- Coffee Modal Component -->
+        <x-coffee-modal />
     </body>
 </html>

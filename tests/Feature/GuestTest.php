@@ -184,4 +184,211 @@ class GuestTest extends TestCase
         $this->assertDatabaseMissing('guests', ['id' => $guest2->id]);
         $this->assertDatabaseHas('guests', ['id' => $guest3->id]);
     }
+
+    public function test_export_fails_with_error_when_guest_count_is_zero(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Empty Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('events.guests.export', $event));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error', 'Cannot export an empty guest list. Please add at least 1 guest.');
+    }
+
+    public function test_export_succeeds_when_guests_exist(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Populated Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+        Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Alice Doe',
+            'email' => 'alice@example.com',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('events.guests.export', $event));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-disposition', 'attachment; filename="guests-populated-event.csv"');
+    }
+
+    public function test_events_show_renders_disabled_export_button_when_no_guests(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Empty Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('events.show', $event));
+
+        $response->assertStatus(200);
+        $response->assertSee('title="Add at least 1 guest to enable export"', false);
+        $response->assertSee('opacity-50 cursor-not-allowed pointer-events-none bg-gray-100 text-gray-400 border-gray-200', false);
+        $response->assertSee('disabled', false);
+    }
+
+    public function test_events_show_renders_enabled_export_button_when_guests_exist(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Populated Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+        Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Alice Doe',
+            'email' => 'alice@example.com',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('events.show', $event));
+
+        $response->assertStatus(200);
+        $response->assertSee('bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200', false);
+        $response->assertSee(route('events.guests.export', $event), false);
+    }
+
+    public function test_guest_creation_rejects_formula_injection_characters(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Security Test Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        $invalidPayloads = [
+            ['name' => '=1+1', 'email' => 'valid@example.com', 'field' => 'name'],
+            ['name' => '+cmd|', 'email' => 'valid@example.com', 'field' => 'name'],
+            ['name' => '-2+3', 'email' => 'valid@example.com', 'field' => 'name'],
+            ['name' => '@SUM(1,2)', 'email' => 'valid@example.com', 'field' => 'name'],
+            ['name' => 'Valid Name', 'phone' => '+1234567890', 'field' => 'phone'],
+            ['name' => 'Valid Name', 'phone_number' => '=SUM(A1)', 'field' => 'phone_number'],
+            ['name' => 'Valid Name', 'companion_name' => '@Admin', 'field' => 'companion_name'],
+        ];
+
+        foreach ($invalidPayloads as $payload) {
+            $field = $payload['field'];
+            unset($payload['field']);
+            $response = $this->actingAs($user)->post(route('events.guests.store', $event), $payload);
+            $response->assertSessionHasErrors([$field => 'Field inputs cannot start with special formula characters like =, +, -, or @.']);
+        }
+    }
+
+    public function test_guest_update_rejects_formula_injection_characters(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Security Test Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+        $guest = Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Original Name',
+            'email' => 'original@example.com',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('guests.update', $guest), [
+            'name' => '=HYPERLINK("http://malicious.site")',
+            'email' => 'original@example.com',
+        ]);
+
+        $response->assertSessionHasErrors(['name' => 'Field inputs cannot start with special formula characters like =, +, -, or @.']);
+    }
+
+    public function test_csv_export_sanitizes_formula_injection_characters(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Export Sanitization Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        // Create guest directly in database with potential formula payload
+        $guest = Guest::create([
+            'event_id' => $event->id,
+            'name' => '=SUM(1+1)',
+            'email' => '@evil.com',
+            'phone' => '+1234567890',
+            'max_companions' => 2,
+        ]);
+        $guest->rsvp()->create([
+            'status' => 'attending',
+            'companions_count' => 1,
+            'companion_name' => '-CompanionPayload',
+            'message' => "=1+1;cmd|' /C calc'!A0",
+            'responded_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('events.guests.export', $event));
+        $response->assertStatus(200);
+
+        ob_start();
+        $response->sendContent();
+        $csvContent = ob_get_clean();
+
+        $this->assertStringContainsString("'=SUM(1+1)", $csvContent);
+        $this->assertStringContainsString("'@evil.com", $csvContent);
+        $this->assertStringContainsString("'+1234567890", $csvContent);
+        $this->assertStringContainsString("'-CompanionPayload", $csvContent);
+        $this->assertStringContainsString("'=1+1;cmd|' /C calc'!A0", $csvContent);
+    }
+
+    public function test_events_show_auto_opens_add_guest_modal_on_validation_error(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Modal Error Test Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        // Submit invalid guest (empty name)
+        $response = $this->actingAs($user)
+            ->from(route('events.show', $event))
+            ->post(route('events.guests.store', $event), [
+                'name' => '',
+            ]);
+
+        $response->assertRedirect(route('events.show', $event));
+        $response->assertSessionHasErrors('name');
+
+        // Follow redirect to events.show
+        $followResponse = $this->actingAs($user)->get(route('events.show', $event));
+        $followResponse->assertStatus(200);
+        $followResponse->assertSee('showAddGuestModal: true', false);
+        $followResponse->assertSee('show: false', false);
+        $followResponse->assertSee('The name field is required.', false);
+    }
 }
+
+
+

@@ -1,9 +1,9 @@
 <section>
-    <header class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-800">
+    <header class="mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg font-bold text-gray-900">
             {{ __('Profile Information') }}
         </h2>
-        <p class="mt-1 text-sm text-gray-500">
+        <p class="text-xs sm:text-sm text-gray-500 mt-0.5">
             {{ __("Update your account's name and email address.") }}
         </p>
     </header>
@@ -12,19 +12,19 @@
         @csrf
     </form>
 
-    <form method="post" action="{{ route('profile.update') }}" class="space-y-4">
+    <form method="post" action="{{ route('profile.update') }}" class="space-y-3 sm:space-y-4">
         @csrf
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            <x-input-label for="name" :value="__('Name')" class="text-xs sm:text-sm font-medium text-gray-700" />
+            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full py-2 px-3 text-sm rounded-lg" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
+            <x-input-label for="email" :value="__('Email')" class="text-xs sm:text-sm font-medium text-gray-700" />
+            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full py-2 px-3 text-sm rounded-lg" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
@@ -46,7 +46,7 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
                 {{ __('Save') }}
             </button>
 
