@@ -6,6 +6,21 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Invitr') }}</title>
+        <link rel="icon" type="image/png" href="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+        <!-- Open Graph / Facebook / Messenger -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ config('app.url') }}">
+        <meta property="og:title" content="Invitr - Digital Invitations & RSVP System">
+        <meta property="og:description" content="Create beautiful event invitations, invite guests with unique links, and track attendance in real-time.">
+        <meta property="og:image" content="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+        <!-- Twitter / X -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:url" content="{{ config('app.url') }}">
+        <meta name="twitter:title" content="Invitr - Digital Invitations & RSVP System">
+        <meta name="twitter:description" content="Create beautiful event invitations, invite guests with unique links, and track attendance in real-time.">
+        <meta name="twitter:image" content="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

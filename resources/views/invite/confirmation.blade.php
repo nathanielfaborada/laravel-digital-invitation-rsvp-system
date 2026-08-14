@@ -12,6 +12,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSVP Confirmed: {{ $guest->event->title ?? 'Invitation' }}</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+    <!-- Open Graph / Facebook / Messenger -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="RSVP Confirmed: {{ $guest->event->title ?? 'Invitation' }}">
+    <meta property="og:description" content="RSVP has been confirmed for {{ $guest->name }} - {{ $guest->event->title ?? 'Event' }}.">
+    <meta property="og:image" content="{{ $guest->event->cover_image ?? 'https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png' }}">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="RSVP Confirmed: {{ $guest->event->title ?? 'Invitation' }}">
+    <meta name="twitter:description" content="RSVP has been confirmed for {{ $guest->name }} - {{ $guest->event->title ?? 'Event' }}.">
+    <meta name="twitter:image" content="{{ $guest->event->cover_image ?? 'https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png' }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 text-slate-800 font-sans">
