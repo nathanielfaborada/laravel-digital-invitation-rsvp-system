@@ -59,10 +59,18 @@ class GuestController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'max_companions' => 'nullable|integer|min:0',
+            'name' => ['required', 'string', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'email' => ['nullable', 'email', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'phone' => ['nullable', 'string', 'max:50', 'regex:/^(?![=\+\-@]).*/i'],
+            'phone_number' => ['nullable', 'string', 'max:50', 'regex:/^(?![=\+\-@]).*/i'],
+            'companion_name' => ['nullable', 'string', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'max_companions' => ['nullable', 'integer', 'min:0'],
+        ], [
+            'name.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'email.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'phone.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'phone_number.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'companion_name.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
         ]);
 
         $exists = Guest::where('event_id', $event->id)
@@ -79,6 +87,7 @@ class GuestController extends Controller
         }
 
         $validated['event_id'] = $event->id;
+        $validated['phone'] = $validated['phone'] ?? $validated['phone_number'] ?? null;
         $validated['max_companions'] = $validated['max_companions'] ?? 1;
 
         $guest = Guest::create($validated);
@@ -133,17 +142,27 @@ class GuestController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'max_companions' => 'nullable|integer|min:0',
-            'status' => 'nullable|in:pending,attending,not_attending',
+            'name' => ['required', 'string', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'email' => ['nullable', 'email', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'phone' => ['nullable', 'string', 'max:50', 'regex:/^(?![=\+\-@]).*/i'],
+            'phone_number' => ['nullable', 'string', 'max:50', 'regex:/^(?![=\+\-@]).*/i'],
+            'companion_name' => ['nullable', 'string', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
+            'max_companions' => ['nullable', 'integer', 'min:0'],
+            'status' => ['nullable', 'in:pending,attending,not_attending'],
+        ], [
+            'name.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'email.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'phone.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'phone_number.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'companion_name.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
         ]);
+
+        $phone = $validated['phone'] ?? $validated['phone_number'] ?? null;
 
         $guest->update([
             'name' => $validated['name'],
             'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
+            'phone' => $phone,
             'max_companions' => $validated['max_companions'] ?? 0,
         ]);
 
@@ -220,9 +239,24 @@ class GuestController extends Controller
         return redirect()->back()->with('success', $count . ' guests deleted successfully!');
     }
 
+    /**
+     * Sanitize a single CSV field against formula injection.
+     */
+    public function sanitizeCsvField($value)
+    {
+        if (is_string($value) && in_array(substr(trim($value), 0, 1), ['=', '+', '-', '@', "\t", "\r"])) {
+            return "'" . $value; // Prefix with single quote so Excel handles it strictly as text
+        }
+        return $value;
+    }
+
     public function export(Event $event)
     {
         $this->authorize('view', $event);
+
+        if ($event->guests()->count() === 0) {
+            return back()->with('error', 'Cannot export an empty guest list. Please add at least 1 guest.');
+        }
 
         $guests = $event->guests()->with('rsvp')->get();
 
@@ -235,17 +269,18 @@ class GuestController extends Controller
 
         $callback = function () use ($guests) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Name', 'Email', 'Phone', 'Max Companions', 'RSVP Status', 'Companions Bringing', 'Message']);
+            fputcsv($file, ['Name', 'Email', 'Phone', 'Max Companions', 'RSVP Status', 'Companions Bringing', 'Companion Name', 'Message']);
 
             foreach ($guests as $guest) {
                 fputcsv($file, [
-                    $guest->name,
-                    $guest->email,
-                    $guest->phone,
-                    $guest->max_companions,
-                    $guest->rsvp?->status ?? 'pending',
-                    $guest->rsvp?->companions_count ?? '-',
-                    $guest->rsvp?->message ?? '-',
+                    $this->sanitizeCsvField($guest->name),
+                    $this->sanitizeCsvField($guest->email),
+                    $this->sanitizeCsvField($guest->phone),
+                    $this->sanitizeCsvField($guest->max_companions),
+                    $this->sanitizeCsvField($guest->rsvp?->status ?? 'pending'),
+                    $this->sanitizeCsvField($guest->rsvp?->companions_count ?? '-'),
+                    $this->sanitizeCsvField($guest->rsvp?->companion_name ?? '-'),
+                    $this->sanitizeCsvField($guest->rsvp?->message ?? '-'),
                 ]);
             }
 

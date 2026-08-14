@@ -4,9 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy Policy — {{ config('app.name', 'Invitr') }}</title>
+    <!-- Alpine.js Cloak Protection -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     @vite(['resources/css/app.css'])
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body 
+    x-data="{ showCoffeeModal: false }"
+    class="bg-gray-50 min-h-screen"
+>
 
     <x-public-nav />
 
@@ -41,18 +48,23 @@
                 </section>
 
                 <section>
-                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">3. Email Delivery</h2>
-                    <p>We use a third-party email service provider (Brevo) to deliver invitation emails. Guest email addresses are shared with this provider solely for the purpose of sending invitations.</p>
+                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">3. Data Sharing & Disclosure</h2>
+                    <p>We do not sell, rent, or trade your personal information. Information is shared only in the following limited circumstances:</p>
+                    <ul class="list-disc list-inside space-y-1 mt-2">
+                        <li><strong>Between Hosts and Guests:</strong> Event details and RSVP responses are shared between the Host and invited guests for that event.</li>
+                        <li><strong>Service Providers:</strong> We may use third-party services (e.g., email delivery) that process data on our behalf under confidentiality agreements.</li>
+                        <li><strong>Legal Requirements:</strong> We may disclose information if required by law or in response to valid legal requests.</li>
+                    </ul>
                 </section>
 
                 <section>
-                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">4. Data Storage & Security</h2>
-                    <p>Your information is stored in a secure database and is not sold or shared with third parties beyond what is necessary to operate the Service (such as email delivery).</p>
+                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">4. Data Retention & Deletion</h2>
+                    <p>We retain event and guest data for as long as the Host's account is active. Hosts may delete individual events or guests at any time. When an event is deleted, associated guest lists and RSVP responses are permanently removed.</p>
                 </section>
 
                 <section>
-                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">5. Guest Rights</h2>
-                    <p>Guests who wish to have their information removed from an event may contact the Host directly, or reach out to us for assistance.</p>
+                    <h2 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">5. Security</h2>
+                    <p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
                 </section>
 
                 <section>
@@ -74,8 +86,8 @@
         </div>
     </div>
 
-    
+    <x-public-footer />
+    <x-coffee-modal />
 
 </body>
-<x-public-footer />
 </html>

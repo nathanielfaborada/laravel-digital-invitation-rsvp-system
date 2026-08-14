@@ -4,9 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Terms & Conditions — {{ config('app.name', 'Invitr') }}</title>
+    <!-- Alpine.js Cloak Protection -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     @vite(['resources/css/app.css'])
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body 
+    x-data="{ showCoffeeModal: false }"
+    class="bg-gray-50 min-h-screen"
+>
 
     <x-public-nav />
 
@@ -62,8 +69,8 @@
         </div>
     </div>
 
-    
+    <x-public-footer />
+    <x-coffee-modal />
 
 </body>
-<x-public-footer />
 </html>

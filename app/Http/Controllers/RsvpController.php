@@ -43,9 +43,12 @@ class RsvpController extends Controller
             'status' => 'required|in:attending,not_attending',
             'attending' => 'nullable|in:yes,no',
             'has_companion' => 'nullable',
-            'companion_name' => 'nullable|string|max:255',
+            'companion_name' => ['nullable', 'string', 'max:255', 'regex:/^(?![=\+\-@]).*/i'],
             'companions_count' => "nullable|integer|min:0|max:{$maxAllowed}",
-            'message' => 'nullable|string|max:1000',
+            'message' => ['nullable', 'string', 'max:1000', 'regex:/^(?![=\+\-@]).*/i'],
+        ], [
+            'companion_name.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
+            'message.regex' => 'Field inputs cannot start with special formula characters like =, +, -, or @.',
         ]);
 
         $isAttending = ($validated['status'] === 'attending') || ($request->input('attending') === 'yes');

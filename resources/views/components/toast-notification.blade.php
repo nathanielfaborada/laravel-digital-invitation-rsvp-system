@@ -52,11 +52,11 @@
     x-transition:leave="transition ease-in duration-200 transform"
     x-transition:leave-start="opacity-100 translate-y-0 sm:translate-x-0"
     x-transition:leave-end="opacity-0 translate-y-2 sm:translate-y-0 sm:translate-x-4"
-    class="fixed top-5 right-5 z-50 max-w-sm w-full pointer-events-auto"
+    class="fixed top-4 inset-x-4 sm:left-auto sm:right-5 sm:top-5 z-[9999] max-w-md mx-auto sm:mx-0 w-auto shadow-lg rounded-xl transition-all duration-300 pointer-events-auto"
 >
     <div 
         :class="type === 'error' ? 'border-rose-500' : 'border-emerald-500'"
-        class="bg-white border-l-4 shadow-lg p-4 rounded-xl flex items-center gap-3 relative overflow-hidden"
+        class="flex items-center gap-3 p-3.5 sm:p-4 bg-white border border-gray-100 border-l-4 rounded-xl shadow-xl relative overflow-hidden"
     >
         <!-- Icon -->
         <div 
@@ -76,9 +76,7 @@
         </div>
 
         <!-- Message -->
-        <div class="flex-1 min-w-0">
-            <p class="text-xs font-bold text-gray-900 leading-snug truncate sm:whitespace-normal" x-text="message"></p>
-        </div>
+        <p class="text-xs sm:text-sm font-medium text-gray-800 break-words flex-1 leading-snug" x-text="message"></p>
 
         <!-- Manual Dismiss Button -->
         <button 

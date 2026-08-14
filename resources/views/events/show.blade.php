@@ -14,7 +14,7 @@
             event_date: @js(old('event_date', $event->event_date)),
             event_time: @js(old('event_time', $event->event_time)),
             venue: @js(old('venue', $event->venue)),
-            showAddGuestModal: @js(old('name') !== null || $errors->any()),
+            showAddGuestModal: {{ $errors->has('name') || $errors->has('email') || $errors->has('phone') || $errors->has('phone_number') || $errors->has('companion_name') || $errors->has('max_companions') ? 'true' : 'false' }},
             showPreviewModal: false,
             showGuestDetailsModal: false,
             activeGuest: null,
@@ -84,14 +84,26 @@
                         @endif
 
                         <!-- Export CSV Icon / Pill Button -->
-                        <a href="{{ route('events.guests.export', $event) }}" 
-                           title="Export CSV"
-                           class="h-9 sm:h-10 inline-flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 border border-emerald-200/60">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            <span class="hidden sm:inline whitespace-nowrap">Export</span>
-                        </a>
+                        @if ($event->guests->count() === 0)
+                            <button type="button" 
+                                    disabled 
+                                    title="Add at least 1 guest to enable export"
+                                    class="h-9 sm:h-10 inline-flex items-center justify-center gap-1.5 border opacity-50 cursor-not-allowed pointer-events-none bg-gray-100 text-gray-400 border-gray-200 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap shrink-0">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span class="hidden sm:inline whitespace-nowrap">Export</span>
+                            </button>
+                        @else
+                            <a href="{{ route('events.guests.export', $event) }}" 
+                               title="Export CSV"
+                               class="h-9 sm:h-10 inline-flex items-center justify-center gap-1.5 border bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-200 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0">
+                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                <span class="hidden sm:inline whitespace-nowrap">Export</span>
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -103,16 +115,6 @@
                 @if (session('error'))
                     <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-xs sm:text-sm font-medium">
                         {{ session('error') }}
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-xs sm:text-sm">
-                        <ul class="list-disc list-inside">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
                     </div>
                 @endif
 
@@ -317,6 +319,16 @@
 
                     <!-- Modal Body (Edit Mode) -->
                     <div class="p-5 overflow-y-auto flex-1 bg-white space-y-4 text-xs sm:text-sm">
+                        @if ($errors->any())
+                            <div class="bg-rose-50 border border-rose-200 text-rose-700 px-3.5 py-2.5 rounded-xl text-xs">
+                                <ul class="list-disc list-inside space-y-0.5">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <!-- Name -->
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Guest Name <span class="text-rose-500">*</span></label>

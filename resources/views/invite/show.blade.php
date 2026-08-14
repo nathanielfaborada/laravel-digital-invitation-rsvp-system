@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>You're Invited: {{ $event->title }}</title>
+    <!-- Alpine.js Cloak Protection -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body 
     x-data="{ 
-        showRsvpModal: @js(session('openRsvp', false) || isset($openRsvp) || $errors->any()),
+        showRsvpModal: {{ $errors->any() ? 'true' : (session('openRsvp', false) || isset($openRsvp) ? 'true' : 'false') }},
         attending: 'yes', 
         hasCompanion: false 
     }" 
