@@ -33,7 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::get('/dashboard/stats', [EventController::class, 'dashboardStats'])->name('dashboard.stats');
     Route::resource('events', EventController::class);
+    Route::get('/events/{event}/rsvp-stats', [EventController::class, 'rsvpStats'])->name('events.rsvp-stats');
     Route::get('/events/{event}/guests/export', [GuestController::class, 'export'])->name('events.guests.export');
     Route::post('/guests/{guest}/send-invite', [GuestController::class, 'sendInvite'])->name('guests.send-invite');
     Route::delete('/guests/bulk-destroy', [GuestController::class, 'bulkDestroy'])->name('guests.bulk-destroy');
