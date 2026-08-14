@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>You're Invited: {{ $event->title }}</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+    <!-- Open Graph / Facebook / Messenger -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="You're Invited: {{ $event->title }}">
+    <meta property="og:description" content="{{ $event->description ? \Illuminate\Support\Str::limit($event->description, 150) : 'You are invited to ' . $event->title . '. Click to view event details and RSVP.' }}">
+    <meta property="og:image" content="{{ $event->cover_image ?: 'https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png' }}">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="You're Invited: {{ $event->title }}">
+    <meta name="twitter:description" content="{{ $event->description ? \Illuminate\Support\Str::limit($event->description, 150) : 'You are invited to ' . $event->title . '. Click to view event details and RSVP.' }}">
+    <meta name="twitter:image" content="{{ $event->cover_image ?: 'https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png' }}">
+
     <!-- Alpine.js Cloak Protection -->
     <style>
         [x-cloak] { display: none !important; }

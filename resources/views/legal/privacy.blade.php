@@ -4,6 +4,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Privacy Policy — {{ config('app.name', 'Invitr') }}</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+    <!-- Open Graph / Facebook / Messenger -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ config('app.url') }}">
+    <meta property="og:title" content="Privacy Policy — Invitr">
+    <meta property="og:description" content="Privacy policy and data protection information for Invitr digital invitation and RSVP system.">
+    <meta property="og:image" content="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ config('app.url') }}">
+    <meta name="twitter:title" content="Privacy Policy — Invitr">
+    <meta name="twitter:description" content="Privacy policy and data protection information for Invitr digital invitation and RSVP system.">
+    <meta name="twitter:image" content="https://res.cloudinary.com/wyofiygs/image/upload/v1786740228/Untitled_design_10_jee5wc.png">
+
     <!-- Alpine.js Cloak Protection -->
     <style>
         [x-cloak] { display: none !important; }
