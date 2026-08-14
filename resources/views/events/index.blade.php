@@ -33,6 +33,45 @@
         dateFilter: 'all',
         customDate: '',
         events: @js($events),
+        pollTimer: null,
+
+        init() {
+            this.startPolling();
+            window.addEventListener('beforeunload', () => this.stopPolling());
+        },
+
+        startPolling() {
+            this.pollTimer = setInterval(() => {
+                this.fetchStats();
+            }, 4000);
+        },
+
+        stopPolling() {
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
+            }
+        },
+
+        async fetchStats() {
+            try {
+                const response = await fetch('{{ route('dashboard.stats') }}', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.events) {
+                        this.events = data.events;
+                    }
+                }
+            } catch (e) {
+                // Silently ignore background polling errors
+            }
+        },
 
         isEventPast(eventDate, eventTime) {
             if (!eventDate) return false;

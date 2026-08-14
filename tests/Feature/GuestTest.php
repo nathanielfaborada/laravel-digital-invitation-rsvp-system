@@ -388,6 +388,102 @@ class GuestTest extends TestCase
         $followResponse->assertSee('show: false', false);
         $followResponse->assertSee('The name field is required.', false);
     }
+
+    public function test_event_rsvp_stats_endpoint_returns_accurate_stats(): void
+    {
+        $user = User::factory()->create();
+        $event = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Stats Test Event',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Main Hall',
+        ]);
+
+        $guest1 = Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Attending Guest',
+            'email' => 'attending@example.com',
+            'max_companions' => 2,
+        ]);
+        $guest1->rsvp()->create([
+            'status' => 'attending',
+            'companions_count' => 2,
+        ]);
+
+        $guest2 = Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Declined Guest',
+            'email' => 'declined@example.com',
+            'max_companions' => 0,
+        ]);
+        $guest2->rsvp()->create([
+            'status' => 'not_attending',
+            'companions_count' => 0,
+        ]);
+
+        $guest3 = Guest::create([
+            'event_id' => $event->id,
+            'name' => 'Pending Guest',
+            'email' => 'pending@example.com',
+            'max_companions' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('events.rsvp-stats', $event));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'stats' => [
+                    'total_invited' => 3,
+                    'attending' => 1,
+                    'not_attending' => 1,
+                    'pending' => 1,
+                    'total_headcount' => 3, // 1 guest + 2 companions
+                ],
+            ])
+            ->assertJsonCount(3, 'guests');
+
+        // Test unauthorized user cannot view stats
+        $otherUser = User::factory()->create();
+        $this->actingAs($otherUser)->getJson(route('events.rsvp-stats', $event))
+            ->assertStatus(403);
+    }
+
+    public function test_dashboard_stats_endpoint_returns_user_aggregate_stats(): void
+    {
+        $user = User::factory()->create();
+        $event1 = Event::create([
+            'user_id' => $user->id,
+            'title' => 'Event 1',
+            'event_date' => now()->addDays(5)->format('Y-m-d'),
+            'event_time' => '18:00:00',
+            'venue' => 'Venue 1',
+        ]);
+
+        $guest1 = Guest::create([
+            'event_id' => $event1->id,
+            'name' => 'Guest 1',
+            'max_companions' => 1,
+        ]);
+        $guest1->rsvp()->create([
+            'status' => 'attending',
+            'companions_count' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.stats'));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'stats' => [
+                    'total_events' => 1,
+                    'total_invited' => 1,
+                    'attending' => 1,
+                    'not_attending' => 0,
+                    'pending' => 0,
+                    'total_headcount' => 2,
+                ],
+            ]);
+    }
 }
 
 

@@ -26,4 +26,37 @@
             {{ __('Log Out') }}
         </button>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const pollInterval = 3000;
+            const statusUrl = "{{ route('verification.status') }}";
+
+            const timer = setInterval(async function () {
+                try {
+                    const res = await fetch(statusUrl, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.verified === true) {
+                            clearInterval(timer);
+                            window.location.href = "{{ route('dashboard') }}";
+                        }
+                    }
+                } catch (e) {
+                    // Silently ignore network interruptions during polling
+                }
+            }, pollInterval);
+
+            window.addEventListener('beforeunload', function () {
+                clearInterval(timer);
+            });
+        });
+    </script>
 </x-guest-layout>

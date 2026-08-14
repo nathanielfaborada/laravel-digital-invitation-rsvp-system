@@ -71,7 +71,7 @@ class EventController extends Controller
             'pending' => $guests->filter(fn($g) => $g->rsvp === null)->count(),
             'total_headcount' => $guests
                 ->filter(fn($g) => $g->rsvp?->status === 'attending')
-                ->sum(fn($g) => 1 + $g->rsvp->companions_count),
+                ->sum(fn($g) => 1 + ($g->rsvp->companions_count ?? 0)),
         ];
 
         return view('events.show', compact(
@@ -79,6 +79,57 @@ class EventController extends Controller
             'guests',
             'stats'
         ));
+    }
+
+    /**
+     * Get real-time RSVP stats and guest list for an event.
+     */
+    public function rsvpStats(Event $event)
+    {
+        $this->authorize('view', $event);
+
+        $guests = $event->guests()->with('rsvp')->latest()->get();
+
+        $stats = [
+            'total_invited' => $guests->count(),
+            'attending' => $guests->filter(fn($g) => $g->rsvp?->status === 'attending')->count(),
+            'not_attending' => $guests->filter(fn($g) => $g->rsvp?->status === 'not_attending')->count(),
+            'pending' => $guests->filter(fn($g) => $g->rsvp === null)->count(),
+            'total_headcount' => $guests
+                ->filter(fn($g) => $g->rsvp?->status === 'attending')
+                ->sum(fn($g) => 1 + ($g->rsvp->companions_count ?? 0)),
+        ];
+
+        return response()->json([
+            'stats' => $stats,
+            'guests' => $guests,
+        ]);
+    }
+
+    /**
+     * Get aggregate dashboard stats for the authenticated user.
+     */
+    public function dashboardStats()
+    {
+        $events = auth()->user()->events()->with(['guests.rsvp'])->latest()->get();
+
+        $allGuests = $events->flatMap->guests;
+
+        $stats = [
+            'total_events' => $events->count(),
+            'total_invited' => $allGuests->count(),
+            'attending' => $allGuests->filter(fn($g) => $g->rsvp?->status === 'attending')->count(),
+            'not_attending' => $allGuests->filter(fn($g) => $g->rsvp?->status === 'not_attending')->count(),
+            'pending' => $allGuests->filter(fn($g) => $g->rsvp === null)->count(),
+            'total_headcount' => $allGuests
+                ->filter(fn($g) => $g->rsvp?->status === 'attending')
+                ->sum(fn($g) => 1 + ($g->rsvp->companions_count ?? 0)),
+        ];
+
+        return response()->json([
+            'stats' => $stats,
+            'events' => $events,
+        ]);
     }
 
     /**

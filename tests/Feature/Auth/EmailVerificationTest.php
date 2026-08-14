@@ -79,4 +79,24 @@ class EmailVerificationTest extends TestCase
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
         $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
     }
+
+    public function test_email_verification_status_endpoint_returns_false_when_unverified(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $response = $this->actingAs($user)->getJson(route('verification.status'));
+
+        $response->assertStatus(200)
+            ->assertExactJson(['verified' => false]);
+    }
+
+    public function test_email_verification_status_endpoint_returns_true_when_verified(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson(route('verification.status'));
+
+        $response->assertStatus(200)
+            ->assertExactJson(['verified' => true]);
+    }
 }

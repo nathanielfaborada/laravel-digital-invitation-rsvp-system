@@ -4,7 +4,53 @@
     currentPage: 1,
     perPage: 10,
     guests: @js($guests),
+    stats: @js($stats),
     selected: [],
+    pollTimer: null,
+
+    init() {
+        this.startPolling();
+        window.addEventListener('beforeunload', () => this.stopPolling());
+    },
+
+    startPolling() {
+        this.pollTimer = setInterval(() => {
+            this.fetchStats();
+        }, 3000);
+    },
+
+    stopPolling() {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+    },
+
+    async fetchStats() {
+        try {
+            const response = await fetch('{{ route('events.rsvp-stats', $event) }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.stats) {
+                    this.stats = data.stats;
+                }
+                if (data.guests) {
+                    this.guests = data.guests;
+                    const guestIds = this.guests.map(g => g.id);
+                    this.selected = this.selected.filter(id => guestIds.includes(id));
+                }
+            }
+        } catch (e) {
+            // Silently catch network errors during background polling
+        }
+    },
 
     get isAllSelected() {
         if (this.paginatedGuests.length === 0) return false;
@@ -78,31 +124,31 @@
     <div class="grid grid-cols-3 lg:grid-cols-5 gap-2.5 mb-5">
         <!-- Row 1 / Slot 1: Total Invited -->
         <div class="bg-white rounded-xl shadow-2xs py-2 px-2.5 text-center border border-gray-100 flex flex-col justify-center">
-            <p class="text-base sm:text-lg font-bold text-gray-800">{{ $stats['total_invited'] }}</p>
+            <p class="text-base sm:text-lg font-bold text-gray-800" x-text="stats.total_invited">{{ $stats['total_invited'] }}</p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold truncate" title="Total Invited">Total Invited</p>
         </div>
 
         <!-- Row 1 / Slot 2: Attending -->
         <div class="bg-white rounded-xl shadow-2xs py-2 px-2.5 text-center border border-gray-100 flex flex-col justify-center">
-            <p class="text-base sm:text-lg font-bold text-emerald-600">{{ $stats['attending'] }}</p>
+            <p class="text-base sm:text-lg font-bold text-emerald-600" x-text="stats.attending">{{ $stats['attending'] }}</p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold truncate" title="Attending">Attending</p>
         </div>
 
         <!-- Row 1 / Slot 3: Not Attending -->
         <div class="bg-white rounded-xl shadow-2xs py-2 px-2.5 text-center border border-gray-100 flex flex-col justify-center">
-            <p class="text-base sm:text-lg font-bold text-rose-600">{{ $stats['not_attending'] }}</p>
+            <p class="text-base sm:text-lg font-bold text-rose-600" x-text="stats.not_attending">{{ $stats['not_attending'] }}</p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold truncate" title="Not Attending">Not Attending</p>
         </div>
 
         <!-- Row 2 / Slot 4: Pending -->
         <div class="bg-white rounded-xl shadow-2xs py-2 px-2.5 text-center border border-gray-100 flex flex-col justify-center">
-            <p class="text-base sm:text-lg font-bold text-amber-600">{{ $stats['pending'] }}</p>
+            <p class="text-base sm:text-lg font-bold text-amber-600" x-text="stats.pending">{{ $stats['pending'] }}</p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold truncate" title="Pending">Pending</p>
         </div>
 
         <!-- Row 2 / Slot 5: Total Headcount -->
         <div class="bg-white rounded-xl shadow-2xs py-2 px-2.5 text-center border border-gray-100 flex flex-col justify-center">
-            <p class="text-base sm:text-lg font-bold text-indigo-600">{{ $stats['total_headcount'] }}</p>
+            <p class="text-base sm:text-lg font-bold text-indigo-600" x-text="stats.total_headcount">{{ $stats['total_headcount'] }}</p>
             <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold truncate" title="Total Headcount">Total Headcount</p>
         </div>
 
@@ -125,12 +171,12 @@
 
     <!-- MAIN GUEST LIST CONTAINER -->
     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 sm:p-6 border border-gray-100">
-        @if ($guests->isEmpty())
-            <div class="text-center py-8">
-                <div class="text-3xl mb-2">👥</div>
-                <p class="text-sm text-gray-500">No guests added yet. Click "+ Add Guest" above to get started.</p>
-            </div>
-        @else
+        <div x-show="guests.length === 0" class="text-center py-8">
+            <div class="text-3xl mb-2">👥</div>
+            <p class="text-sm text-gray-500">No guests added yet. Click "+ Add Guest" above to get started.</p>
+        </div>
+
+        <div x-show="guests.length > 0">
 
             <!-- BULK ACTION BAR -->
             <div 
@@ -393,6 +439,6 @@
                 </div>
             </div>
 
-        @endif
+        </div>
     </div>
 </div>
